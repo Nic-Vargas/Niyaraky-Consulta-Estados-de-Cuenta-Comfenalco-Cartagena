@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Consulta por NIT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            padding: 30px;
+            text-align: center;
+        }
+
+        form {
+            margin-bottom: 30px;
+        }
+
+        input {
+            padding: 10px;
+            margin: 5px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .resultados {
+            background: white;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+
+        .descargar {
+            margin-top: 5px;
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+
+        .no-archivo {
+            color: red;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Consulta de Documentos</h1>
+    <form method="POST">
+        <input type="text" name="nit" placeholder="Ingresa el NIT" value="{{ nit }}" required>
+        <br>
+        <button type="submit">Buscar</button>
+    </form>
+
+    {% if resultados %}
+        <div class="resultados">
+            <h2>Resultados para el NIT {{ nit }}</h2>
+            <ul>
+                {% for item in resultados %}
+                    <li style="margin-bottom: 10px;">
+                        {{ item.archivo.split('/')[-1] }}
+                        <a href="{{ item.descargar }}" class="descargar" target="_blank">Descargar</a>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            {% if resultados|length > 1 and nit %}
+                <br>
+                <a href="{{ url_for('descargar_zip', nit=nit) }}"
+                   class="descargar" style="background-color: #6f42c1;">
+                   Descargar todos en ZIP
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</body>
+</html>
