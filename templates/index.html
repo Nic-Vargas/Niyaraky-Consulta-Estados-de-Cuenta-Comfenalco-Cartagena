@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Consulta por NIT</title>
+    <title>Consulta por NIT y Notificación</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,7 +15,7 @@
             margin-bottom: 30px;
         }
 
-        input {
+        input, select {
             padding: 10px;
             margin: 5px;
             width: 300px;
@@ -68,21 +68,25 @@
 
     {% if resultados %}
         <div class="resultados">
-            <h2>Resultados para el NIT {{ nit }}</h2>
+            <h2>Resultados:</h2>
+            <br>
             <ul>
                 {% for item in resultados %}
-                    <li style="margin-bottom: 10px;">
-                        {{ item.archivo.split('/')[-1] }}
-                        <a href="{{ item.descargar }}" class="descargar" target="_blank">Descargar</a>
+                    <li style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <strong>Notificación:</strong> {{ item.nombre }}<br>
+                        {% if item.archivo %}
+                            <a href="{{ item.archivo }}" class="descargar" target="_blank">Descargar archivo</a>
+                        {% else %}
+                            <span class="no-archivo">Archivo no encontrado</span>
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>
-
-            {% if resultados|length > 1 and nit %}
+            {% if resultados|length > 1 %}
                 <br>
                 <a href="{{ url_for('descargar_zip', nit=nit) }}"
-                   class="descargar" style="background-color: #6f42c1;">
-                   Descargar todos en ZIP
+                    class="descargar" style="background-color: #6f42c1;">
+                    Descargar todos en ZIP
                 </a>
             {% endif %}
         </div>

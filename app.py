@@ -8,72 +8,77 @@ app = Flask(__name__)
 
 # ── RUTAS BÁSICAS ────────────────────────────────────────────────────────────────
 DB_PATH      = 'Data/Base Empresas.xlsx'   # Excel con columna DOC_EMPRESA
-ZIP_PATH = 'Data/EC.zip'                        # Carpeta con archivos por NIT
+ARCHIVOS_DIR = 'Data/EC'                                   # Carpeta con archivos por NIT
 
 # ── CARGA Y LIMPIEZA DEL EXCEL ───────────────────────────────────────────────────
 df_base = pd.read_excel(DB_PATH)
 df_base.columns = df_base.columns.str.strip()              # quita espacios en encabezados
 df_base.rename(columns={'DOC_EMPRESA': 'NIT'}, inplace=True)  # renombramos a 'NIT' interno
 
-
 # ── RUTA PRINCIPAL ───────────────────────────────────────────────────────────────
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    nit = ''
-    resultados = []
-    empresa = None
+    nit       = ''
+    resultados = []   # lista de dicts con {'archivo': '/descargar/…', 'nombre': 'archivo.xlsx'}
+    empresa   = None  # para mostrar info adicional si existe en el Excel
 
     if request.method == 'POST':
         nit = request.form['nit'].strip()
-        fila = df_base[df_base['NIT'].astype(str) == nit]
-        if not fila.empty:
-            empresa = fila.iloc[0].to_dict()
+        print(f"🔎 Buscando archivos para NIT: {nit}")
 
-        with zipfile.ZipFile(ZIP_PATH, 'r') as z:
-            for archivo in z.namelist():
-                if archivo.endswith(('.xlsx', '.xls')) and nit in archivo:
-                    resultados.append({
-                        'archivo': archivo,
-                        'descargar': f"/descargar_zip_file/{archivo}"
-                    })
+        # 1️⃣ Filtrar Excel para mostrar datos de la empresa (opcional)
+        fila_excel = df_base[df_base['NIT'].astype(str) == nit]
+        if not fila_excel.empty:
+            empresa = fila_excel.iloc[0].to_dict()
 
-    return render_template('index.html', nit=nit, empresa=empresa, resultados=resultados)
+        # 2️⃣ Buscar archivos que contengan el NIT en su nombre dentro de Data/EC
+        for archivo in os.listdir(ARCHIVOS_DIR):
+            if archivo.endswith(('.xlsx', '.xls')) and nit in archivo:
+                resultados.append({
+                    'archivo': f"/descargar/{archivo}",
+                    'nombre': archivo
+                })
+
+        print(f"📂 Archivos encontrados: {[r['nombre'] for r in resultados]}")
+
+    return render_template(
+        'index.html',
+        nit=nit,
+        empresa=empresa,           # dict o None
+        resultados=resultados      # lista de archivos encontrados
+    )
 
 # ── DESCARGA INDIVIDUAL ──────────────────────────────────────────────────────────
-@app.route('/descargar_zip_file/<path:nombre>')
-def descargar_zip_file(nombre):
-    with zipfile.ZipFile(ZIP_PATH, 'r') as z:
-        if nombre not in z.namelist():
-            abort(404)
-        data = z.read(nombre)
-        return send_file(io.BytesIO(data), as_attachment=True, download_name=os.path.basename(nombre))
+@app.route('/descargar/<archivo>')
+def descargar(archivo):
+    ruta = os.path.join(ARCHIVOS_DIR, archivo)
+    if os.path.exists(ruta):
+        return send_file(ruta, as_attachment=True)
+    abort(404)
 
 # ── DESCARGA ZIP (todos los archivos que contengan ese NIT) ─────────────────────
 @app.route('/descargar_zip/<nit>')
 def descargar_zip(nit):
-    if not os.path.exists(ZIP_PATH):
+    archivos = [
+        os.path.join(ARCHIVOS_DIR, f)
+        for f in os.listdir(ARCHIVOS_DIR)
+        if f.endswith(('.xlsx', '.xls')) and nit in f
+    ]
+
+    if not archivos:
         abort(404)
 
-    archivos_filtrados = []
+    # Crear ZIP en memoria
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w') as z:
+        for ruta in archivos:
+            z.write(ruta, os.path.basename(ruta))
+    buffer.seek(0)
 
-    with zipfile.ZipFile(ZIP_PATH, 'r') as z:
-        for nombre in z.namelist():
-            if nombre.endswith(('.xlsx', '.xls')) and nit in nombre:
-                archivos_filtrados.append(nombre)
-
-        if not archivos_filtrados:
-            abort(404)
-
-        # Crear un ZIP en memoria con solo los archivos que coinciden
-        buffer = io.BytesIO()
-        with zipfile.ZipFile(buffer, 'w') as zip_out:
-            for archivo in archivos_filtrados:
-                zip_out.writestr(archivo, z.read(archivo))
-
-        buffer.seek(0)
-
-        nombre_zip = f"{nit}_documentos.zip"
-        return send_file(buffer, as_attachment=True, download_name=nombre_zip, mimetype='application/zip')
+    nombre_zip = f"{nit}_docs.zip"
+    return send_file(buffer, as_attachment=True,
+                     download_name=nombre_zip,
+                     mimetype='application/zip')
 
 # ── LANZAR SERVIDOR ──────────────────────────────────────────────────────────────
 if __name__ == '__main__':
