@@ -7,7 +7,7 @@ import zipfile
 app = Flask(__name__)
 
 # ── RUTAS BÁSICAS ────────────────────────────────────────────────────────────────
-DB_PATH      = 'Data/Base Empresas.xlsx'   # Excel con columna DOC_EMPRESA
+DB_PATH      = 'Data/Base Junio 2025.xlsx'   # Excel con columna DOC_EMPRESA
 ARCHIVOS_DIR = 'Data/EC'                                   # Carpeta con archivos por NIT
 
 # ── CARGA Y LIMPIEZA DEL EXCEL ───────────────────────────────────────────────────
