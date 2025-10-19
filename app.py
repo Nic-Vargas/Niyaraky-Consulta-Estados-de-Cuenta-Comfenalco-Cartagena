@@ -11,7 +11,7 @@ DB_PATH      = 'Data/Base Junio 2025 Final.xlsx'   # Excel con columna DOC_EMPRE
 ARCHIVOS_DIR = 'Data/EC'                                   # Carpeta con archivos por NIT
 
 # ── CARGA Y LIMPIEZA DEL EXCEL ───────────────────────────────────────────────────
-df_base = pd.read_excel(DB_PATH)
+df_base = pd.read_excel(DB_PATH, engine="openpyxl")
 df_base.columns = df_base.columns.str.strip()              # quita espacios en encabezados
 df_base.rename(columns={'DOC_EMPRESA': 'NIT'}, inplace=True)  # renombramos a 'NIT' interno
 
