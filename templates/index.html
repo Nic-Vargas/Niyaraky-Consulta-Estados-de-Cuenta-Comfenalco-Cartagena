@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Consulta Estados de Cuenta</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 100px;
+        }       
+
+         .logo-superior {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            height: 120px;
+        }
+
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #e10918;
+            color: white;
+            padding: 12px;
+            border: none;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .resultados {
+            margin-top: 10px;
+        }
+
+        .archivo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .archivo span {
+            font-size: 15px;
+            color: #333;
+        }
+
+        .descargar {
+            background-color: #14438f;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+
+        .descargar:hover {
+            background-color: #6584b5;
+        }
+
+        .descargar-zip {
+            margin-top: 20px;
+            display: block;
+            background-color: #6f42c1;
+            padding: 10px;
+            text-align: center;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+
+        .empresa {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-left: 4px solid #007BFF;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-bottom: 30px;
+        }
+
+        .footer img {
+            height: 80px;
+        }
+
+        .footer p {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+      
+    </style>
+</head>
+<body>
+    <img src="{{ url_for('static', filename='Logo-Cartagena.png') }}" alt="Logo" class="logo-superior">
+
+    <main>
+        <div class="container">
+            <h1>Consulta Estado de Cuenta</h1>
+
+            <form method="POST">
+                <input type="text" name="nit" placeholder="Ingresa el NIT" value="{{ nit }}" required>
+                <button type="submit">Buscar</button>
+            </form>
+
+            {% if empresa %}
+            <div class="empresa">
+                <strong>Razón Social:</strong> {{ empresa['RAZON_SOCIAL'] }}
+            </div>
+            {% endif %}
+
+            {% if resultados %}
+            <div class="resultados">
+                <h2>Resultado de la búsqueda:</h2>
+                {% for item in resultados %}
+                    <div class="archivo">
+                        <span>{{ item.nombre }}</span>
+                        <a href="{{ item.archivo }}" class="descargar" target="_blank">Descargar Estado de Cuenta</a>
+                    </div>
+                {% endfor %}
+
+                {% if resultados|length > 1 %}
+                    <a href="{{ url_for('descargar_zip', nit=nit) }}" class="descargar-zip">Descargar todos en ZIP</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <img src="{{ url_for('static', filename='Isotipo-Niyaraky-01.png') }}" alt="Marca Inferior">
+        <p>Niyaraky Colombia SAS <br> Todos los derechos reservados 2025 <br> <a href="https://www.niyaraky.co/">www.niyaraky.co</a></p>
+        
+    </footer>
+</body>
+
+</html>
